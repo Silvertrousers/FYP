@@ -1,0 +1,51 @@
+\documentclass[table]{report}
+\usepackage[explicit]{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{subcaption}
+\usepackage[labelformat=parens,labelsep=quad,skip=3pt]{caption}
+\usepackage{graphicx}
+\usepackage[english]{babel}
+\usepackage{pdflscape}
+
+
+
+\usepackage{todonotes}
+\usepackage[noframe]{showframe}
+\usepackage{framed}
+\usepackage{lipsum}
+\renewenvironment{shaded}{%
+  \def\FrameCommand{\fboxsep=\FrameSep \colorbox{shadecolor}}%
+  \MakeFramed{\advance\hsize-\width \FrameRestore\FrameRestore}}%
+ {\endMakeFramed}
+\definecolor{shadecolor}{gray}{0.75}
+
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage[capitalise]{cleveref}
+
+\title{Interim Report}
+\author{Cyrus Mohamad Zand Goodarzi}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\input{introduction/main}
+
+\input{lit_review/main}
+\input{functional_spec/main}
+
+
+
+
+\input{project_plan/main}
+
+\bibliographystyle{acm}
+\bibliography{references}
+
+\end{document}

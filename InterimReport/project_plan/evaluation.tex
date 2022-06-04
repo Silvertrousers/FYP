@@ -1,0 +1,17 @@
+\section{Evaluation}
+The project will be considered a success if I can run my selected benchmarks on the hardware system and it produces the correct results. I also wish to see if the hardware system (extended RV32G CPU) I have designed, renders the image faster than the CPU core on its own.
+\subsection{Compared Systems}
+My system will be compared with the unmodified CPU as the main benchmark. Benchmark programs will be compiled for RV32G and will run in a bare metal execution environment where execution starts from when the power turns on. 
+
+To compare the CPU and extended CPU, I will need to design some benchmark programs. 
+
+\subsection{Benchmarks}
+The benchmarks will be based on an openGl compliant program that implements the graphics pipeline entirely in software. 
+This program will be referred to as a software rasterizer (SWR). The SWR will be able to render objects modelled in blender. The SWR will then be cross compiled so it can be run on an RV32G CPU core. 
+The SWR can then be modified to use the hardware rasterizer unit that I have designed. To do so, the part of the code that does rasterization in the SWR can be replaced with a call of my custom instruction. This modified program will be referred to as a hardware rasterizer (HWR).  The HWR will then be used to render the same blender objects.
+\subsection{Experiments}
+The SWR will be used to render the objects and produce some images and the time taken to produce each image will also be recorded. These resulting images will be used as a control test.
+The HWR will then be used to render the exact same objects and will produce some images the time taken to produce each image will also be recorded. 
+Firstly, the results from both tests can be compared to see if there is any visible difference between the images. If there is not, the HWR has rendered the scene successfully and so the project can be considered a success.
+To compare performance the rendering times of the SWR and HWR can be compared. It is expected that the HWR will have significantly faster rendering times. If it does not,  however, analysis can be done on the performance characteristics of my design to explain why it performs so poorly.
+  

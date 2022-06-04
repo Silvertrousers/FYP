@@ -1,0 +1,91 @@
+\section{Tasks}\label{sec:MVPProjectTasks}
+\begin{enumerate} 
+  \item Design and implement a software rasterizer (SWR) to use for bench-marking and testing
+
+  \begin{enumerate}
+    \item Needs to implement the entire graphics pipeline
+    \item Rasterization part of the pipeline should be implemented as a function with the same interface as the instruction I am planning to implement.
+  \end{enumerate}
+    
+    \item Make the SWR openGL compliant with the spec of my instruction
+    \item Cross compile the SWR to RISC-V
+    \begin{enumerate}
+        \item Select a RISC-V tool-chain, the tool-chain used may be affected by the CPU core being used and which tools it comes with
+    \end{enumerate}
+    
+    \item Decide on CPU core being used
+    \begin{enumerate}
+        \item If I use BOOM or Rocket I will need to account for time needed to learn Chisel
+    \end{enumerate}
+    
+    \item System Design
+    \begin{enumerate}
+        \item System Architecture design 
+        \begin{enumerate}
+            \item Memory system, location of registers, where does the rasterizer fit in the CPU pipeline?
+        \end{enumerate}
+        
+        \item Design of the rasterizer subsystem
+        \item Modify RISC-V core to implement hardware for new instruction
+        \begin{enumerate}
+            \item Modify decode unit
+            \item If an OOO Core is used will need to modify register renaming system and other systems
+        \end{enumerate}
+        \item Micro-architectural design
+        \item Implementation in RTL/Chisel
+        \item RTL simulation
+        \item Unit level testing and subsystem testing
+        \item FPGA implementation
+        \item Top level testing
+        \begin{enumerate}
+            \item Implement benchmark with new instruction and run on system
+        \end{enumerate}
+    \end{enumerate}
+    
+    \item Verification
+    \begin{enumerate}
+        \item Likely do directed testing, maybe do constrained random if time? 
+        \item Each level of testing should have a well thought out test plan
+    \end{enumerate}
+    \item Evaluation
+    \item Further modification/optimisation of Design based on evaluation
+        
+\end{enumerate}
+
+\section{Timeline}
+There are 18 Weeks from the submission of this report to the deadline of the abstract and draft report. \Cref{tab:ProjectTimeline} shows a timeline for the tasks, outlined in \Cref{sec:MVPProjectTasks}, that need to be completed  in order to deliver the MVP. 
+
+\begin{table}[ht]
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Task}                                                                                    & \textbf{\begin{tabular}[c]{@{}l@{}}Time Needed \\ (Weeks)\end{tabular}} & \textbf{End Date} \\ \hline
+\begin{tabular}[c]{@{}l@{}}Design and implement \\ a software rasterizer (SWR)\end{tabular}      & 1                                                                       & 6 Feb             \\ \hline
+Make the SWR openGL compliant                                                                    & 1                                                                       & 13 Feb            \\ \hline
+Cross compile the SWR to RISC-V                                                                  & 1                                                                       & 20 Feb            \\ \hline
+Decide on CPU core                                                                               & 1                                                                       & 27 Feb            \\ \hline
+\begin{tabular}[c]{@{}l@{}}System Design\\ (Broken down into the following 8 Tasks)\end{tabular} & 12                                                                      & 22 May            \\ \hline
+\multicolumn{1}{|r|}{System Architecture design}                                                 & 1                                                                       & 6 Mar             \\ \hline
+\multicolumn{1}{|r|}{Design of the rasterizer subsystem}                                         & 1                                                                       & 13 Mar            \\ \hline
+\rowcolor[HTML]{FD6864} 
+\multicolumn{1}{|r|}{\cellcolor[HTML]{FD6864}Modify RISC-V core}                                 & {\color[HTML]{FFFFFF} 1}                                                                        & 27 Mar            \\ \hline
+\rowcolor[HTML]{FD6864} 
+\multicolumn{1}{|r|}{\cellcolor[HTML]{FD6864}Micro-architectural design}                         & {\color[HTML]{FFFFFF} 1}                                                                        & 3 Apr             \\ \hline
+\rowcolor[HTML]{FD6864} 
+\multicolumn{1}{|r|}{\cellcolor[HTML]{FD6864}Implementation in RTL/Chisel}                       & {\color[HTML]{FFFFFF} 1}                                                                        & 24 Apr            \\ \hline
+\rowcolor[HTML]{FD6864} 
+\multicolumn{1}{|r|}{\cellcolor[HTML]{FD6864}Unit and Subsystem Testing}                         & {\color[HTML]{FFFFFF} 1}                                                                        & 1 May             \\ \hline
+\multicolumn{1}{|r|}{FPGA implementation}                                                        & 2                                                                       & 15 May            \\ \hline
+\multicolumn{1}{|r|}{Top level testing}                                                          & 1                                                                       & 22 May            \\ \hline
+Evaluation                                                                                       & 2                                                                       & 5 June            \\ \hline
+\rowcolor[HTML]{00B050} 
+Abstract and Draft Report                                                                        & {\color[HTML]{FFFFFF} 1}                                                & 6 June            \\ \hline
+\rowcolor[HTML]{00B050} 
+Final Report                                                                                     & {\color[HTML]{FFFFFF} 1}                                                & 22 June           \\ \hline
+\rowcolor[HTML]{00B050} 
+Presentations                                                                                    & {\color[HTML]{FFFFFF} 1}                                                                      & 27 June           \\ \hline
+\end{tabular}
+\caption{Timeline for the tasks that need to be completed to deliver the project MVP. The red rows represent tasks that will take place during the Easter Holiday. Green rows represent project deliverables. The system design task is also broken down into sub-tasks each of which have their own assigned due date.}
+\label{tab:ProjectTimeline}
+\end{table}
+
+The plan is to write the report as I go. This is why there is very little time between finishing evaluation and the deadline for the first draft of the final report.

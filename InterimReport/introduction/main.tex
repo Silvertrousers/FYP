@@ -1,0 +1,71 @@
+\chapter{Introduction}\label{chapter:introduction}
+\todo{re write this whole intro paragraph to make more sense}
+
+
+
+\todo{find some references for this, this should be put in more detail in the background section}
+What are the pros and cons of making this an integrated instruction vs making a full extra GPU that needs a bus interconnect with the CPU core:
+Pro's:
+- don't need to develop drivers so easier to create system and easier to use system
+- no memory bandwidth bottleneck that is presented by a discrete system
+- modular, can just add more extra graphics instructions as I go along (extensible)
+- this is useful in places where things like integrated graphics are useful right? Where are integrated graphics useful 
+
+
+
+\todo{Brief history of the GPU}
+
+
+The aim of this project is to extend the RISC-V ISA with instructions to accelerate the rendering of 3D graphics by implementing part of the fixed function 3D graphics pipeline.
+
+The minimum viable product would be to create an instruction that would perform the rasterization stage of the 3D rendering pipeline. This would accept a set of triangles that have been projected from 3D space into 2D screen space with an arbitrary projection matrix. The triangles are composed of vertices and their associated attributes like texture coordinates, colours and normals.
+
+The instruction would then accelerate both the inner and outer loops of the rasterization algorithm, as described in \Cref{algorithm:rasterizationPseudocode}.
+
+Currently, an open-source graphical instruction extension available for RISC-V does not exist. FGPU\cite{FGPU} is a soft GPU designed as a standalone system, this means that if it were to interface with a RISC-V soft CPU it may suffer from data transfer bottlenecks that are common to this kind of system, the
+GPU would also have to be accessed using drivers of some sort making the creation and use of such
+a system more complex.
+The Pixilica group \cite{pixillicaRV64X} aims to implement an ISA extension for RISC-V for general purpose compute.
+However, other than their initial document explaining the ISA and their system architecture they
+provide no other information or technical specifications on the project.
+While an ISA extension for general purpose compute is very flexible, it comes with increased area and power costs and additional complexity.
+
+To differentiate my project from the two above, I will be focusing on two design principles which will be refereed to as P1 and P2.
+\begin{itemize}
+    \item[P1.] \textbf{Extensibility}
+    \item[P2.] \textbf{Open-Source}
+\end{itemize}
+
+All design decisions made during this project should aim to satisfy one or both of the above principles as long as that decision does not make it so the project cannot be completed.
+
+There are several advantages of the system I will design:
+\begin{itemize}
+    \item By extending RISC-V one instruction at a time, this project has the advantage of being able to test and use implemented hardware much earlier in the process of designing a whole graphics system. This is unlike Pixillica who will take far longer to start implementation and use of their system.
+    \item The fixed function and more specialised nature of my project will also allow the user of my system to render graphics and output frames with lower area utilisation, power consumption and
+potentially greater performance for those selected operations. 
+    \item The addition of a common GPU feature as an ISA extension also means drivers for my accelerator do not need to be developed.
+    \item The open-source nature of the project also takes advantage of cross verification between the teams that implement or modify the system.
+\end{itemize}
+
+
+\section{Minimum Viable Product (MVP)}
+The minimum viable product for this project would be to add a single instruction to the RISC-V 32G ISA that would accelerate both loops of the triangle rasterization algorithm in hardware.
+
+The system would be a combination of a pre-existing RV32G compliant CPU core with an added hardware accelerator to implement the rasterization instruction. I wish to implement the system on the DE1-SoC Board. 
+
+This is because rasterization forms a fundamental part of the 3D graphics pipeline and one that can benefit greatly from a fixed function accelerator. This will provide a strong proof of concept for a graphics ISA extension.
+The hardware rasterizer will be compliant with Chapter 14.6 of the OpenGL 4.6 Core Profile Specification\cite{OpenGLSpec}. This provides a functional specification for a fixed function rasterizer with optional anti-aliasing and with support for a depth buffer.
+
+The hardware system will run a software implementation of the graphics pipeline in order to render a scene. However, the part of the pipeline corresponding to rasterization will be replaced by the custom RISC-V instruction. The program will run in a bare metal execution environment.
+
+The functional specification of the MVP will be described in \Cref{sec:functionalSpec}.
+
+\section{Extensions}
+The first obvious extension is to optimise the performance of the system. 
+Additional features from the OpenGL spec can also be added like adding point and line rasterizers.
+Additional instructions to accelerate other parts of the graphics pipeline can be designed and implemented as well. For example, adding an instruction to do texture mapping, vertex transformations and image filtering.
+
+\section{Fallbacks}
+If time is limited, the features of the MVP can be reduced for example by not implementing a depth buffer or by using a more naïve rasterization algorithm. 
+Another option for simplifying the project would be to write the RTL for the project but only run it in simulation instead of implementing it on an FPGA. This alone could save huge amounts of time and because this step is the last in the project it could very easily be skipped without making previous work redundant.
+This second option is more likely to be the fallback I take.
