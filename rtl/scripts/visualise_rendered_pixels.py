@@ -1,5 +1,6 @@
 
 from cProfile import label
+from cgi import test
 import sys
 import numpy as np
 from PNM import *
@@ -7,6 +8,9 @@ import math
 import json
 from ctypes import *
 from dataclasses import dataclass
+from matplotlib import pyplot as plt
+#from matplotlib import rc
+
 
 @dataclass
 class Pixel:
@@ -26,18 +30,92 @@ class Pixel:
 # The following is a command to run a top sim
 #iverilog -o top_Test -c file_list.txt -I src/hardfloat_veri/ -v -D THREE_TRI_HANDWRITTEN_STRIP -D PIPE_2 -s top_Test; vvp top_Test > run_log.txt
 
+
+
 def main():
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+    
+    period = 20
+    num_pipes = 1
+
+    with open('run_log.txt', "r") as log_file:
+        log_data = json.load(log_file)
+    pixel_output(log_data)
+    visualise_plot("main_mem_rd_activity",log_data,period)
+    visualise_plot("main_mem_wr_activity",log_data,period)
+
+    for i in range(0,num_pipes):
+        visualise_plot(f"tri_fifo_rd_en_{i}",log_data,period)
+        visualise_plot(f"tri_fifo_wr_en_{i}",log_data,period)
+        visualise_plot(f"frag_fifo_rd_en_{i}",log_data,period)
+        visualise_plot(f"frag_fifo_wr_en_{i}",log_data,period)
+
+def visualise_plot(label, log_data,period):
+    # main_mem_wr_activity
+    # tri_fifo_rd_en_
+    # tri_fifo_wr_en_
+    x_data = []
+    y_data = []
+    for item in log_data["sim_log"]:
+        if(item["label"] == f"[{label}]"):
+            y_data.append(item["data"])
+            x_data.append(int(item["time"])/period)
+        # if(item["label"] == "[main_mem_wr_activity]"):
+        # if(item["label"] == "[tri_fifo_rd_en_]"):
+        # if(item["label"] == "[tri_fifo_wr_en_]"):
+    label = label.replace("_"," ")
+    marker = "x"
+    f = plt.figure(label)
+    plt.xlabel('time (cycles)')
+    plt.ylabel(label,fontsize=16)
+    plt.title(label,fontsize=16)
+    plt.step(x_data, y_data)
+
+    #fig=plt.gcf()
+    #fig.set_size_inches(x,y)
+    plt.savefig(f"data/{label}.pdf", format="pdf", dpi=1200)
+
+def visualise_accumulate(label, log_data,period):
+    # main_mem_wr_activity
+    # tri_fifo_rd_en_
+    # tri_fifo_wr_en_
+    x_data = []
+    y_data = []
+    y_tmp = 0
+    for item in log_data["sim_log"]:
+        if(item["label"] == f"[{label}]"):
+            y_tmp += item["data"]
+            y_data.append(y_tmp)
+            x_data.append(int(item["time"])/period)
+        # if(item["label"] == "[main_mem_wr_activity]"):
+        # if(item["label"] == "[tri_fifo_rd_en_]"):
+        # if(item["label"] == "[tri_fifo_wr_en_]"):
+    label = label.replace("_"," ")
+    marker = "x"
+    f = plt.figure(label)
+    plt.xlabel('time (cycles)')
+    plt.ylabel(label,fontsize=16)
+    plt.title(label,fontsize=16)
+    
+    
+
+    plt.step(x_data, y_data)
+
+    #fig=plt.gcf()
+    #fig.set_size_inches(x,y)
+    plt.savefig(f"data/{label}.pdf", format="pdf", dpi=1200)
+       
+ 
+
+def pixel_output(log_data):
     res_x = 0
     res_y = 0
   
     pixels = []
     
-
+#all time axes should be devided by 20 to be in terms of cycles
     
-    
-    with open('run_log.txt', "r") as log_file:
-        log_data = json.load(log_file)
-
     pixel_attr_count = 0
 
     for item in log_data["sim_log"]:
@@ -46,6 +124,10 @@ def main():
             
         if(item["label"] == "[res_y]"):
             res_y = item["data"]
+
+        if(item["label"] == "[Total_Cycles]"):
+            cycles = item["data"]
+            print(f"Total Cycles taken: {cycles}")
 
         if(item["label"] == "[frag_mem_write]"):
             if(item["data"][1] != "0xxxxxxxxx"):
@@ -84,7 +166,6 @@ def main():
             
     #write_pfm(screen, f'data/triRender.pfm')
     writePFMtoPPM(f'triRender', screen, res_y, res_x)
-   
 
 def hexstr2float(s):
     i = int(s, 16)                   # convert from hex to a Python int
@@ -138,3 +219,6 @@ def clampLowerUpper(m, lower, upper):
 
 if '__main__' == __name__:
     main()
+
+
+

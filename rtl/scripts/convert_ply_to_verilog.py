@@ -76,3 +76,8 @@ def main():
     print(out)
 if '__main__' == __name__:
     main()
+
+#matplot lib generated random triangles before processing to get before and after
+#abstarct: no link to main report, summary of report
+#   write and change is better, accessible
+# future reference of what graphs might be drawn in design section, setting out as an important thing, research question for each designed object

@@ -1,0 +1,159 @@
+ctrl_reg0[31:LOCAL_VERTEX_MEM_ADDR_WIDTH+8] = 'b0;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+7] = NOPERSPECTIVE;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+6] = FLAT;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+5] = PROVOKEMODE;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+4] = WINDINGORDER;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+3] = FACE_CULLER_ENABLE;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+2] = ORIGIN_LOCATION;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+1:LOCAL_VERTEX_MEM_ADDR_WIDTH] = MODE;
+ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH-1:0] = VERTEXSIZE;
+ctrl_reg1[15:0] = 'd3;
+ctrl_reg1[16] = TRIANGLE_STRIP;
+
+res_reg = {16'd20,16'd20}; //resx 16 bit, resy 16 bit
+
+i_array_ptr = 'h0;
+v_array_ptr = 'h5;
+f_array_ptr = 'h2d;
+
+#(PERIOD);
+tri_mem_wr_en = 1'b1;
+tri_mem_wr_data = 'h0;
+tri_mem_wr_addr = 'h0;
+#(PERIOD);
+tri_mem_wr_data = ZeroFP;//v0.x
+tri_mem_wr_addr = 'h5;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.y
+tri_mem_wr_addr = 'h6;
+#(PERIOD);
+tri_mem_wr_data = OneFP;//v0.z
+tri_mem_wr_addr = 'h7;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v0.r
+tri_mem_wr_addr = 'h8;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.g
+tri_mem_wr_addr = 'h9;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.b
+tri_mem_wr_addr = 'ha;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.s
+tri_mem_wr_addr = 'hb;
+#(PERIOD); 
+tri_mem_wr_data = 'h123;//v0.t
+tri_mem_wr_addr = 'hc;
+
+#PERIOD
+tri_mem_wr_data = 'h1;
+tri_mem_wr_addr = 'h1;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v1.x
+tri_mem_wr_addr = 'hd;
+#(PERIOD); 
+tri_mem_wr_data = NineFP;//v1.y
+tri_mem_wr_addr = 'he;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v1.z
+tri_mem_wr_addr = 'hf;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v1.r
+tri_mem_wr_addr = 'h10;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v1.g
+tri_mem_wr_addr = 'h11;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v1.b
+tri_mem_wr_addr = 'h12;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v1.s
+tri_mem_wr_addr = 'h13;
+#(PERIOD); 
+tri_mem_wr_data = 'h123;//v1.t
+tri_mem_wr_addr = 'h14;
+
+#PERIOD
+tri_mem_wr_data = 'h2;
+tri_mem_wr_addr = 'h2;
+#(PERIOD); 
+tri_mem_wr_data = TenFP;//v2.x
+tri_mem_wr_addr = 'h15;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v2.y
+tri_mem_wr_addr = 'h16;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v2.z
+tri_mem_wr_addr = 'h17;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v2.r
+tri_mem_wr_addr = 'h18;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v2.g
+tri_mem_wr_addr = 'h19;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v2.b
+tri_mem_wr_addr = 'h1a;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v1.s
+tri_mem_wr_addr = 'h1b;
+#(PERIOD); 
+tri_mem_wr_data = 'h123;//v1.t
+tri_mem_wr_addr = 'h1c;
+#(PERIOD);
+
+tri_mem_wr_data = 'h3;
+tri_mem_wr_addr = 'h3;
+#(PERIOD);
+tri_mem_wr_data = TenFP;//v0.x
+tri_mem_wr_addr = 'h1d;
+#(PERIOD); 
+tri_mem_wr_data = NineFP;//v0.y
+tri_mem_wr_addr = 'h1e;
+#(PERIOD);
+tri_mem_wr_data = OneFP;//v0.z
+tri_mem_wr_addr = 'h1f;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v0.r
+tri_mem_wr_addr = 'h20;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.g
+tri_mem_wr_addr = 'h21;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.b
+tri_mem_wr_addr = 'h22;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.s
+tri_mem_wr_addr = 'h23;
+#(PERIOD); 
+tri_mem_wr_data = 'h123;//v0.t
+tri_mem_wr_addr = 'h24;
+
+#(PERIOD);
+tri_mem_wr_data = 'h4;
+tri_mem_wr_addr = 'h4;
+#(PERIOD);
+tri_mem_wr_data = TwentyFP;//v0.x 
+tri_mem_wr_addr = 'h25;
+#(PERIOD); 
+tri_mem_wr_data = ThirteenFP;//v0.y 
+tri_mem_wr_addr = 'h26;
+#(PERIOD);
+tri_mem_wr_data = OneFP;//v0.z
+tri_mem_wr_addr = 'h27;
+#(PERIOD); 
+tri_mem_wr_data = OneFP;//v0.r
+tri_mem_wr_addr = 'h28;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.g
+tri_mem_wr_addr = 'h29;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.b
+tri_mem_wr_addr = 'h2a;
+#(PERIOD); 
+tri_mem_wr_data = ZeroFP;//v0.s
+tri_mem_wr_addr = 'h2b;
+#(PERIOD); 
+tri_mem_wr_data = 'h123;//v0.t
+tri_mem_wr_addr = 'h2c;
+#(PERIOD);

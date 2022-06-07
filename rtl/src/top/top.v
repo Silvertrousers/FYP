@@ -93,7 +93,7 @@ module top#(
     wire [2:0][LOCAL_VERTEX_MEM_ADDR_WIDTH-1:0] v_mem_rd_addr;
     wire [2:0][0:0]                             v_mem_rd_en;
 
-
+    reg  [NUM_T_PIPES-1:0] tri_pipe_active;
     always @(posedge clk or negedge resetn) begin: INPUT_CAPTURE
         if(~resetn)begin
             i_array_ptrReg <= 'b0;
@@ -201,12 +201,13 @@ loadBalancer#(
 );
     wire all_pipes_ready;
     assign all_pipes_ready = (&tri_pipe_ready); //unary and
-
+    reg tmp_done;
     always @(posedge clk or negedge resetn) begin: START_AND_DONE
         if(~resetn)begin
             done <= 'b0;
             load_balancer_start <= 'b0;
             ready <= 1'b0;
+            tmp_done <= 1'b0;
         end else begin
             if(start) begin
                 load_balancer_start <= 1'b1;
@@ -214,10 +215,15 @@ loadBalancer#(
             end else begin
                 load_balancer_start <= 1'b0;
             end
-            if((load_balancer_ready) && (tri_fifo_empty) && (frag_fifo_empty) && (all_pipes_ready)) begin
+            if((load_balancer_ready) && (tri_fifo_empty) && (frag_fifo_empty) && (all_pipes_ready) && (tri_pipe_active=='b0)) begin
+                tmp_done <= 1'b1;
+            end 
+            if((load_balancer_ready) && (tri_fifo_empty) && (frag_fifo_empty) && (all_pipes_ready) && (tri_pipe_active=='b0) && (tmp_done == 1'b1)) begin
                 done <= 1'b1;
                 ready <= 1'b1;
-            end else begin 
+                tmp_done <= 1'b0;
+            end
+            if(done == 1'b1) begin 
                 done <= 1'b0;
             end
         end
@@ -231,11 +237,16 @@ loadBalancer#(
             always @(posedge clk or negedge resetn) begin: T_PIPE_START
                 if(~resetn)begin
                     tri_pipe_start <= 'b0;
+                    tri_pipe_active <= 'b0;
                 end else begin
                     if(((tri_pipe_ready[t]) && (tri_fifo_threshold[t] || tri_fifo_full[t])) && ~tri_pipe_start[t]) begin
                         tri_pipe_start[t] <= 1'b1;
+                        tri_pipe_active[t] <= 1'b1;
                     end else begin
                         tri_pipe_start[t] <= 1'b0;
+                    end
+                    if(tri_pipe_done[t]) begin
+                        tri_pipe_active[t] <= 1'b0;
                     end
                 end
             end
@@ -359,26 +370,25 @@ loadBalancer#(
         //frag fifo activity
         //tri pipe activity
         //wr arbiter activity
-        if(vert_attr_wr_en[0]) begin
-            $display("[tri_mem_wr_0] data,addr: %0h, %0h", vert_attr_wr_data[0],vert_attr_wr_addr[0]);
+        if(mem_rd_en) begin
+            $display("{\"time\":\"%0t\",\"label\":\"[main_mem_rd_activity]\", \"data\":%0d},", $time, mem_rd_addr);
         end
-        if(vert_attr_wr_en[1]) begin
-            $display("[tri_mem_wr_1] data,addr: %0h, %0h", vert_attr_wr_data[1],vert_attr_wr_addr[1]);
-        end
-        if(vert_attr_wr_en[2]) begin
-            $display("[tri_mem_wr_2] data,addr: %0h, %0h", vert_attr_wr_data[2],vert_attr_wr_addr[2]);
-        end
-
-        if(vert_attr_rd_en[0]) begin
-            $display("[tri_mem_rd_0] data,addr: %0h, %0h", vert_attr_rd_data[0],vert_attr_rd_addr[0]);
-        end
-        if(vert_attr_rd_en[1]) begin
-            $display("[tri_mem_rd_1] data,addr: %0h, %0h", vert_attr_rd_data[1],vert_attr_rd_addr[1]);
-        end
-        if(vert_attr_rd_en[2]) begin
-            $display("[tri_mem_rd_2] data,addr: %0h, %0h", vert_attr_rd_data[2],vert_attr_rd_addr[2]);
+        if(mem_wr_en) begin
+            $display("{\"time\":\"%0t\",\"label\":\"[main_mem_wr_activity]\", \"data\":%0d},", $time, mem_wr_addr);
         end
     end
+    // genvar t_pipe;
+    // generate
+    //     for(t_pipe=0; t_pipe < NUM_T_PIPES; t_pipe=t_pipe+1) begin: T_PIPE_measure
+    //         always @(*) begin
+    //             $display("{\"time\":\"%0t\",\"label\":\"[tri_fifo_rd_en_%0d]\", \"data\":%0b},", $time, t_pipe, tri_fifo_rd_en[t_pipe]);
+    //             $display("{\"time\":\"%0t\",\"label\":\"[tri_fifo_wr_en_%0d]\", \"data\":%0b},", $time, t_pipe, tri_fifo_wr_en[t_pipe]);
+    //             $display("{\"time\":\"%0t\",\"label\":\"[frag_fifo_rd_en_%0d]\", \"data\":%0b},", $time, t_pipe, frag_fifo_rd_en[t_pipe]);
+    //             $display("{\"time\":\"%0t\",\"label\":\"[frag_fifo_wr_en_%0d]\", \"data\":%0b},", $time, t_pipe, frag_fifo_wr_en[t_pipe]);
+    //         //measure empty, measure full, measure threshold, maybe measure how full/empty by looking at wr ptr
+    //         end
+    //     end
+    // endgenerate
 `endif
 endmodule
 

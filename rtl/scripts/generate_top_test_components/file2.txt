@@ -1,0 +1,51 @@
+            $display("{\"time\":\"%0t\",\"label\":\"[res_x]\", \"data\":%0d},", $time,res_reg[31:16]);
+            $display("{\"time\":\"%0t\",\"label\":\"[res_y]\", \"data\":%0d},", $time,res_reg[15:0]);
+            start = 1'b0;
+            #PERIOD;
+            tri_mem_wr_en = 1'b0;
+            start = 1'b1;
+            #PERIOD;
+            start = 1'b0;
+
+        end
+    always 
+        begin
+            clk = 1'b1; 
+            #(PERIOD/2);
+            clk = 1'b0;
+            #(PERIOD/2);
+        end
+    
+    reg [31:0] clk_counter; 
+    always @(posedge clk or negedge resetn) begin
+        if(~resetn) begin
+            clk_counter <= 'b0;
+        end else begin
+            clk_counter <= clk_counter + 'b1;
+            if (done == 1'b1) begin
+                $display("{\"time\":\"%0t\",\"label\":\"[Total_Cycles]\", \"data\":%0d},", $time, clk_counter);
+            end
+        end
+    end
+    always@(negedge clk) begin
+        if (done == 1'b1) begin
+            $display("{\"time\":\"%0t\",\"label\":\"[message]\", \"data\":\"test finished for input combination\"}", $time);
+            $display("]}");
+            $finish;
+        end
+    end
+
+    initial 
+        begin
+            #TIMEOUT;
+            $display("{\"time\":\"%0t\",\"label\":\"[message]\", \"data\":\"Simulation Timed Out :(\"}",  $time);
+            $display("]}");
+            $finish;
+        end
+    initial
+        begin
+        end
+
+endmodule
+
+

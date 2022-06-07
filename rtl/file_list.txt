@@ -38,5 +38,5 @@ test/triangle_pipe/triangle_pipe_Test.v
 src/top/top.v
 test/top/top_Test.v
 src/top/loadBalancer.v
-src/top/wrArbiter.v
+gen/top_test_gen.v
 

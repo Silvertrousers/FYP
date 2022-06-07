@@ -1,0 +1,120 @@
+        localparam CLOCKWISE =  1'b1;
+        localparam ANTICLOCKWISE = 1'b0;
+        localparam TwentyFP = 'h41a00000;
+        localparam ThirteenFP = 'h41500000;
+        localparam TenFP = 32'h41200000;
+        localparam NineFP = 32'h41100000;
+        localparam FourFP = 32'h40800000;
+        localparam TwoFP = 32'h40000000;
+        localparam OneFP = 32'h3f800000;
+        localparam ZeroFP = 32'h00000000;
+        localparam HalfFP = 32'h3f000000;
+        localparam QuarterFP = 32'h3e800000;
+        localparam PERIOD = 20;
+        localparam TIMEOUT = PERIOD*100000;
+        localparam TRI_MEM_FIFODEPTH = (2**LOCAL_VERTEX_MEM_ADDR_WIDTH)*3*5;
+        localparam INDIVIDUAL_TRIANGLES = 1'b0;
+        localparam TRIANGLE_STRIP = 1'b1;
+
+        reg clk;
+        reg resetn; 
+        reg en; 
+        reg start;
+        wire done;
+        wire ready;
+
+        wire [DATA_WIDTH-1:0] tri_mem_rd_data;      
+        wire [MAIN_MEM_ADDR_WIDTH-1:0] tri_mem_rd_addr; 
+        wire [0:0]            tri_mem_rd_en;
+        reg [DATA_WIDTH-1:0] tri_mem_wr_data;      
+        reg [MAIN_MEM_ADDR_WIDTH-1:0] tri_mem_wr_addr; 
+        reg [0:0]            tri_mem_wr_en;
+
+        wire [DATA_WIDTH-1:0] frag_mem_wr_data;       
+        wire [MAIN_MEM_ADDR_WIDTH-1:0] frag_mem_wr_addr; 
+        wire [0:0]            frag_mem_wr_en;
+
+        //instruction inputs
+        reg [DATA_WIDTH-1:0] i_array_ptr;
+        reg [DATA_WIDTH-1:0] v_array_ptr;
+        reg [DATA_WIDTH-1:0] f_array_ptr;
+        reg [31:0] ctrl_reg0; //reg noPerspective, flat, provokeMode, windingOrder, faceCullerEnable, origin_location, [1:0] Mode, [ADDR_WIDTH-1:0] vertexSize;
+        reg [31:0] ctrl_reg1;
+        reg [DATA_WIDTH-1:0] res_reg; //resx 16 bit, resy 16 bit
+
+
+        top#(
+            DATA_WIDTH,
+            MAIN_MEM_ADDR_WIDTH,
+            LOCAL_VERTEX_MEM_ADDR_WIDTH, 
+            CYCLES_WAIT_FOR_RECIEVE,
+            MAIN_MEM_CYCLES_WAIT_FOR_RECIEVE,
+            FIFO_MAX_FRAGMENTS,
+            FIFO_MAX_TRIANGLES,
+            NUM_T_PIPES
+        ) DUT (
+            clk, resetn, en, 
+            start, done, ready,
+
+            tri_mem_rd_data, tri_mem_rd_addr, tri_mem_rd_en,
+            frag_mem_wr_data, frag_mem_wr_addr, frag_mem_wr_en,
+
+            //instruction inputs
+            i_array_ptr,
+            v_array_ptr,
+            f_array_ptr,
+            ctrl_reg0, //reg noPerspective, flat, provokeMode, windingOrder, faceCullerEnable, origin_location, [1:0] Mode, [ADDR_WIDTH-1:0] vertexSize;
+            ctrl_reg1,
+            res_reg //resx 16 bit, resy 16 bit
+        );
+
+        tri_ram_dual_clock_32_32 tri_mem(
+            .data(tri_mem_wr_data),       //data to be written
+            .read_addr(tri_mem_rd_addr),  //address for read operation
+            .write_addr(tri_mem_wr_addr), //address for write operation
+            .we(tri_mem_wr_en),         //write enable signal
+            .read_clk(clk),   //clock signal for read operation
+            .write_clk(clk),  //clock signal for write operation
+            .re(tri_mem_rd_en),         //read enable signal
+            .q(tri_mem_rd_data)           //read data
+        );
+  
+        frag_ram_dual_clock_32_32 frag_mem(
+            .data(frag_mem_wr_data),       //data to be written
+            .read_addr(),  //address for read operation
+            .write_addr(frag_mem_wr_addr), //address for write operation
+            .we(frag_mem_wr_en),         //write enable signal
+            .read_clk(clk),   //clock signal for read operation
+            .write_clk(clk),  //clock signal for write operation
+            .re(),         //read enable signal
+            .q()           //read data
+        );
+        initial
+            begin
+                $dumpfile("top_test_gen.vcd");
+                $dumpvars(0,top_test_gen);
+                en = 1'b1;
+                resetn = 1'b1;
+                #PERIOD;
+                $display("{\"sim_log\": [");
+                
+                #(PERIOD/2);
+                resetn = 1'b0; 
+                #(PERIOD/2);
+                resetn = 1'b1;
+                #(PERIOD);
+                //instruction inputs
+
+                ctrl_reg0[31:LOCAL_VERTEX_MEM_ADDR_WIDTH+8] = 'b0;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+7] = NOPERSPECTIVE;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+6] = FLAT;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+5] = PROVOKEMODE;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+4] = WINDINGORDER;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+3] = FACE_CULLER_ENABLE;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+2] = ORIGIN_LOCATION;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+1:LOCAL_VERTEX_MEM_ADDR_WIDTH] = MODE;
+                ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH-1:0] = VERTEXSIZE;
+             
+                ctrl_reg1[16] = POLY_STORAGE_STRUCTURE;
+
+

@@ -1,6 +1,9 @@
 //works for single fifo
 //TODO: see if it works for multi pipe systems
 // TODO: still issues with cube since faces are getting culled, time to debug now?
+
+
+
 module top_Test#(
     parameter DATA_WIDTH = 32,
     parameter MAIN_MEM_ADDR_WIDTH = 32,
@@ -11,13 +14,8 @@ module top_Test#(
     parameter FIFO_MAX_FRAGMENTS = 16, // must be power of 2
     parameter FIFO_MAX_TRIANGLES = 1, // must be power of 2
 
-`ifdef PIPE_2
-    parameter NUM_T_PIPES = 2,
-`endif
-`ifdef PIPE_1   
     parameter NUM_T_PIPES = 1,
-`endif
-
+    
     parameter NOPERSPECTIVE = 'b0,
     parameter FLAT = 'b0,
     parameter PROVOKEMODE = 'b0,
@@ -170,15 +168,15 @@ module top_Test#(
             ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+3] = FACE_CULLER_ENABLE;
             ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+2] = ORIGIN_LOCATION;
             ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH+1:LOCAL_VERTEX_MEM_ADDR_WIDTH] = MODE;
-            ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH-1:0] = VERTEXSIZE;
-            ctrl_reg1[15:0] = TOTAL_NUM_TRIS;
+            ctrl_reg0[LOCAL_VERTEX_MEM_ADDR_WIDTH-1:0] = 'd7;
+            ctrl_reg1[15:0] = 'd2;
             ctrl_reg1[16] = TRIANGLE_STRIP;
 
             res_reg = {16'd10,16'd10}; //resx 16 bit, resy 16 bit
 
-            i_array_ptr = I_ARRAY_PTR;
-            v_array_ptr = V_ARRAY_PTR;
-            f_array_ptr = F_ARRAY_PTR;
+            i_array_ptr = 'd0;
+            v_array_ptr = 'd4;
+            f_array_ptr = 'h24;
             
             #(PERIOD);
             tri_mem_wr_en = 1'b1;
@@ -1265,9 +1263,15 @@ module top_Test#(
     //         $display("{\"time\":\"%0t\",\"label\":\"[fragment_write]\", \"data\":\"0x%0h\"},", $time,frag_mem_wr_data);
     //     end
     // end
-    always @(posedge clk) begin
-        if(tri_mem_rd_en) begin
-            //$display("{\"time\":\"%0t\",\"label\":\"[tri_read]\", \"data\":\"0x%0h\"},", $time,tri_mem_rd_data);
+    reg [31:0] clk_counter; 
+    always @(posedge clk or negedge resetn) begin
+        if(~resetn) begin
+            clk_counter <= 'b0;
+        end else begin
+            clk_counter <= clk_counter + 'b1;
+            if (done == 1'b1) begin
+                $display("{\"time\":\"%0t\",\"label\":\"[Total_Cycles]\", \"data\":%0d},", $time, clk_counter);
+            end
         end
     end
     always@(negedge clk) begin
