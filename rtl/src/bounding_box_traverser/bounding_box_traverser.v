@@ -249,7 +249,7 @@ module bounding_box_traverser#(
         DATA_WIDTH, ADDR_WIDTH, CYCLES_WAIT_FOR_RECIEVE
     ) fragment_interpolator_inst (
         .clk(clk),
-        .resetn(resetn /*&& fragment_interpolator_resetn*/),
+        .resetn(resetn && fragment_interpolator_resetn),
         .en(en),
 
         .frag_attr_wr_data(frag_attr_wr_data),       

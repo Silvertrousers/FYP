@@ -39,9 +39,11 @@ def main():
     period = 20
     num_pipes = 1
 
-    with open('run_log.txt', "r") as log_file:
+    with open(sys.argv[1], "r") as log_file:
         log_data = json.load(log_file)
-    pixel_output(log_data)
+
+    test_name = sys.argv[2]
+    pixel_output(log_data, test_name)
     visualise_plot("main_mem_rd_activity",log_data,period)
     visualise_plot("main_mem_wr_activity",log_data,period)
 
@@ -108,7 +110,7 @@ def visualise_accumulate(label, log_data,period):
        
  
 
-def pixel_output(log_data):
+def pixel_output(log_data, test_name):
     res_x = 0
     res_y = 0
   
@@ -153,6 +155,7 @@ def pixel_output(log_data):
                 if(pixel_attr_count == 8):
                     t = hexstr2float(item["data"][1])
                     pixel_attr_count = 0
+                    print(x,y)
                     pixels.append(Pixel(x,y,z,r,g,b,s,t))
     screen = np.zeros(shape=(res_y, res_x, 3), dtype=np.float32)
     print(f"resolution: {res_x} x {res_y}")
@@ -165,7 +168,7 @@ def pixel_output(log_data):
 
             
     #write_pfm(screen, f'data/triRender.pfm')
-    writePFMtoPPM(f'triRender', screen, res_y, res_x)
+    writePFMtoPPM(f'renders/{test_name}', screen, res_y, res_x)
 
 def hexstr2float(s):
     i = int(s, 16)                   # convert from hex to a Python int
@@ -175,7 +178,7 @@ def hexstr2float(s):
     
 def writePFMtoPPM(name, PFM, height, width, gc = False, scaling = False):
     PPM = np.empty(shape=(height,width, 3), dtype=np.float32)  
-    write_pfm(PFM,  f'data/{name}.pfm')
+    write_pfm(PFM,  f'{name}.pfm')
     #PFM = clampLowerUpper(PFM, 0, 1)
 
     print(PFM.max(), PFM.min())    
@@ -188,7 +191,7 @@ def writePFMtoPPM(name, PFM, height, width, gc = False, scaling = False):
         PPM = PPM # call scaling function
     if gc:
         PPM = gammaCorrect(1.1, PPM, height, width)
-    write_ppm(PPM.astype(np.uint8), f'data/{name}.ppm')
+    write_ppm(PPM.astype(np.uint8), f'{name}.ppm')
 
 
 def drawVerticalLine(image, x, yMax, yMin, colour):

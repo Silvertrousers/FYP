@@ -1,0 +1,5 @@
+test_id,test_name,res_x,res_y,num_tris,storage_format,size,measure,windingOrder,originLocation,tri_gen_location_seed,fifo_max_frags,fifo_max_tris,num_t_pipes,noPerspective,flat,provokeMode,vertexSize,faceCullerEnable,mode, notes
+0,random_3_cw_bl_tris,100,100,3,"individual",15,"MEASURE","CW","BL",555,16,1,2,0,0,0,7,1,"00", "basic test to see if CW Bl works"
+1,random_3_acw_bl_tris,100,100,3,"individual",15,"MEASURE","ACW","BL",555,16,1,2,0,0,0,7,1,"00", "basic test to see if ACW Bl works"
+2,random_3_acw_tl_tris,100,100,3,"individual",15,"MEASURE","ACW","TL",555,16,1,2,0,0,0,7,1,"00", "should have same result as test 0"
+3,random_3_cw_tl_tris,100,100,3,"individual",15,"MEASURE","CW","TL",555,16,1,2,0,0,0,7,1,"00", "should have same result as test 1"

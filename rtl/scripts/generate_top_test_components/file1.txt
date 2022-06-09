@@ -54,7 +54,7 @@
             NUM_T_PIPES
         ) DUT (
             clk, resetn, en, 
-            start, done, ready,
+            start, /*done*/, ready,
 
             tri_mem_rd_data, tri_mem_rd_addr, tri_mem_rd_en,
             frag_mem_wr_data, frag_mem_wr_addr, frag_mem_wr_en,
