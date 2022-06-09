@@ -201,13 +201,13 @@ loadBalancer#(
 );
     wire all_pipes_ready;
     assign all_pipes_ready = (&tri_pipe_ready); //unary and
-    reg tmp_done;
+    
     always @(posedge clk or negedge resetn) begin: START_AND_DONE
         if(~resetn)begin
             done <= 'b0;
             load_balancer_start <= 'b0;
             ready <= 1'b0;
-            tmp_done <= 1'b0;
+           
         end else begin
             if(start) begin
                 load_balancer_start <= 1'b1;
@@ -216,13 +216,9 @@ loadBalancer#(
                 load_balancer_start <= 1'b0;
             end
             if((load_balancer_ready) && (tri_fifo_empty) && (frag_fifo_empty) && (all_pipes_ready) && (tri_pipe_active=='b0)) begin
-                tmp_done <= 1'b1;
-            end 
-            if((load_balancer_ready) && (tri_fifo_empty) && (frag_fifo_empty) && (all_pipes_ready) && (tri_pipe_active=='b0) && (tmp_done == 1'b1)) begin
                 done <= 1'b1;
                 ready <= 1'b1;
-                tmp_done <= 1'b0;
-            end
+            end 
             if(done == 1'b1) begin 
                 done <= 1'b0;
             end

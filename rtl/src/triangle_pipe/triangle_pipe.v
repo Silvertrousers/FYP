@@ -211,6 +211,7 @@ module triangle_pipe#(
         .flat(flat),
         .provokeMode(provokeMode),
         .windingOrder(windingOrder),
+        .origin_location(origin_location),
         .vertexSize(vertexSize)
     ); 
 

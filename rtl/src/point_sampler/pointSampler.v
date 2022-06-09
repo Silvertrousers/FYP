@@ -5,11 +5,17 @@ module pointSampler(
     input wire [65:0] Pin,
     output wire [65:0] Pout,
     output wire inside,
-    input wire windingOrder
+    input wire windingOrder,
+    input wire origin_location
 
 );
+//asumes tl for now, bl will invert winding order
     localparam CLOCKWISE = 1'b1 ;
     localparam ANTICLOCKWISE = 1'b0;
+
+    //origin_location
+    localparam TL = 1'b0;
+    localparam BL = 1'b1;
 
     // E01(xp, yp) = (xp − xv0) ∗ (yv1 − yv0) − (yp − yv0) ∗ (xv1 − xv0)
     // E12(xp, yp) = (xp − xv1) ∗ (yv2 − yv1) − (yp − yv1) ∗ (xv2 − xv1)
@@ -21,7 +27,7 @@ module pointSampler(
     wire antiClockInside, clockInside;
     assign antiClockInside = gt0ab && gt0bc && gt0ca; //this is the opposite of what it says in scratch a pixel but oh well
     assign clockInside = lt0ab && lt0bc && lt0ca;
-    assign inside = windingOrder ? clockInside : antiClockInside;
+    assign inside = windingOrder ^ origin_location ? clockInside : antiClockInside;
     assign Pout = Pin;
         
         
