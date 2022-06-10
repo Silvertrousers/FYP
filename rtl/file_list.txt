@@ -1,6 +1,5 @@
 src/hardfloat_veri/mulRecFN.v
 src/hardfloat_veri/addRecFN.v
-src/hardfloat_veri/muladdRecFN.v
 src/hardfloat_veri/divSqrtRecFN_small.v
 src/hardfloat_veri/HardFloat_consts.vi
 src/hardfloat_veri/isSigNaNRecFN.v

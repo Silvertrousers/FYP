@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from plyfile import PlyData, PlyElement
 import struct
 import visualise_rendered_pixels as vrp
+from Triangles.generate_tris import gen_tris
 
 def main():
     if(len(sys.argv) > 1):
@@ -75,7 +76,9 @@ def main():
     mode = sim_params_dict["mode"]
     
     vertex_data, index_data = triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri_gen_location_seed, sim_params_dict['test_name'])
-    
+    # print(index_data,vertex_data)
+    # vertex_data, index_data = gen_tris("scripts/Triangles/kitty-cat-kitten-pet-45201.jpeg", num_tris)
+    # print(index_data,vertex_data)
     # test_stim_file = open("scripts/generate_top_test_components/three_tri_handwritten_strip.txt", "r")
     # test_stim = test_stim_file.read()
     # test_stim_file.close()
