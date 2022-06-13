@@ -71,7 +71,7 @@ module triangleFetcher #(
                     end 
                 end
                 WAIT_FOR_FIFO_THRESHOLD: begin
-                    if(tri_fifo_threshold || tri_fifo_full) begin
+                    if(tri_fifo_threshold) begin
                         state <= WRITING;
                         tri_fifo_rd_en<=1'b1; 
                     end

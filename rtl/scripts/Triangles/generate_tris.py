@@ -195,17 +195,29 @@ def sort_tris(points, vertices, colours):
             vertices[i] = np.array([idxs[0], idxs[2], idxs[1]])
     return points, vertices, colours
 
-def add_z(points):
-    return np.hstack((points, np.zeros((len(points), 1))))
+def add_zrgbs(points):
+    return np.hstack((points, np.zeros((len(points), 4))))
 
 def gen_tris(filepath, n):
     tri = get_tris(filepath, n)
     points, indices, colours = sort_tris(*tri)
-    points = add_z(points)
-    vertices = []
-    for i in range(0, len(vertices)):
-        vertex = np.concatenate([points[i], colours[i], np.array([345])])
-        vertices.append(vertex)
+    vertices = add_zrgbs(points)
+    
+    for i in range(len(indices)):
+        vertices[indices[i][0]][3:6] = colours[i]
+    # print(vertices)
+    # print(indices)
+    # print(colours)
+    print(vertices.shape)
+    print(indices.shape)
+    print(colours.shape)
+    #vertices = np.hstack((points, colours))
+  
+    #vertices = np.hstack((vertices, colours))
+    #  []
+    # for i in range(0, len(vertices)):
+    #     vertex = np.concatenate([points[i], colours[i], np.array([345])])
+    #     vertices.append(vertex)
     return vertices, indices
     
 

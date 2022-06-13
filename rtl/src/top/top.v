@@ -50,7 +50,7 @@ module top#(
     
     wire [NUM_T_PIPES-1:0] tri_fifo_full; 
     wire [NUM_T_PIPES-1:0] tri_fifo_empty;
-    wire [NUM_T_PIPES-1:0] tri_fifo_threshold; 
+    wire [NUM_T_PIPES-1:0] tri_fifo_lower_threshold, tri_fifo_upper_threshold; 
     wire [NUM_T_PIPES-1:0] tri_fifo_overflow; 
     wire [NUM_T_PIPES-1:0] tri_fifo_underflow;
 
@@ -62,10 +62,11 @@ module top#(
 
     wire [NUM_T_PIPES-1:0]frag_fifo_full; 
     wire [NUM_T_PIPES-1:0]frag_fifo_empty;
-    wire [NUM_T_PIPES-1:0]frag_fifo_threshold; 
+    wire [NUM_T_PIPES-1:0]frag_fifo_lower_threshold, frag_fifo_upper_threshold; 
     wire [NUM_T_PIPES-1:0]frag_fifo_overflow; 
     wire [NUM_T_PIPES-1:0]frag_fifo_underflow;
-
+    reg [NUM_T_PIPES-1:0][31:0] frag_fifo_wr_count, frag_fifo_rd_count;
+    wire [NUM_T_PIPES-1:0][31:0] frag_fifo_fullness_count;
 
     reg [DATA_WIDTH-1:0] i_array_ptrReg;
     reg [DATA_WIDTH-1:0] v_array_ptrReg;
@@ -74,9 +75,9 @@ module top#(
     reg noPerspective, flat, provokeMode, windingOrder, faceCullerEnable, origin_location, poly_storage_structure;
     reg [1:0] Mode;
     reg [LOCAL_VERTEX_MEM_ADDR_WIDTH-1:0] vertexSize;
-    wire [$clog2(TRI_FIFODEPTH):0] triangle_size;
+    wire [31:0] triangle_size;
     assign triangle_size = (vertexSize +'d1) * 'd3;
-    wire [$clog2(FRAG_FIFODEPTH):0] fragment_size;
+    wire [31:0] fragment_size;
     assign fragment_size = vertexSize + 'b1;
 
     reg [31:0] resx,resy; 
@@ -194,7 +195,8 @@ loadBalancer#(
 
     .tri_fifo_full(tri_fifo_full), 
     .tri_fifo_empty(tri_fifo_empty), 
-    .tri_fifo_threshold(tri_fifo_threshold), 
+    .tri_fifo_lower_threshold(tri_fifo_lower_threshold), 
+    .tri_fifo_upper_threshold(tri_fifo_upper_threshold), 
     .tri_fifo_overflow(tri_fifo_overflow), 
     .tri_fifo_underflow(tri_fifo_underflow),
     .poly_storage_structure(poly_storage_structure)
@@ -235,7 +237,7 @@ loadBalancer#(
                     tri_pipe_start <= 'b0;
                     tri_pipe_active <= 'b0;
                 end else begin
-                    if(((tri_pipe_ready[t]) && (tri_fifo_threshold[t] || tri_fifo_full[t])) && ~tri_pipe_start[t]) begin
+                    if(((tri_pipe_ready[t]) && (tri_fifo_lower_threshold[t])) && ~tri_pipe_start[t]) begin
                         tri_pipe_start[t] <= 1'b1;
                         tri_pipe_active[t] <= 1'b1;
                     end else begin
@@ -254,7 +256,8 @@ loadBalancer#(
                 .data_out(tri_fifo_rd_data[t]),
                 .fifo_full(tri_fifo_full[t]), 
                 .fifo_empty(tri_fifo_empty[t]), 
-                .fifo_threshold(tri_fifo_threshold[t]), 
+                .fifo_lower_threshold(tri_fifo_lower_threshold[t]), 
+                .fifo_upper_threshold(tri_fifo_upper_threshold[t]),
                 .fifo_overflow(tri_fifo_overflow[t]), 
                 .fifo_underflow(tri_fifo_underflow[t]),
                 .clk(clk), 
@@ -282,7 +285,7 @@ loadBalancer#(
                 //fragment fifo control (unused for the moment) TODO: use these flags to control output
                 frag_fifo_full[t], 
                 frag_fifo_empty[t], 
-                frag_fifo_threshold[t], 
+                frag_fifo_lower_threshold[t], 
                 frag_fifo_overflow[t], 
                 frag_fifo_underflow[t],
 
@@ -293,7 +296,7 @@ loadBalancer#(
                 //triangle fifo control (unused for the moment) TODO: use these flags to control output
                 tri_fifo_full[t], 
                 tri_fifo_empty[t], 
-                tri_fifo_threshold[t], 
+                tri_fifo_lower_threshold[t], 
                 tri_fifo_overflow[t], 
                 tri_fifo_underflow[t],
 
@@ -311,7 +314,8 @@ loadBalancer#(
                 .data_out(frag_fifo_rd_data[t]),
                 .fifo_full(frag_fifo_full[t]), 
                 .fifo_empty(frag_fifo_empty[t]), 
-                .fifo_threshold(frag_fifo_threshold[t]), 
+                .fifo_lower_threshold(frag_fifo_lower_threshold[t]), 
+                .fifo_upper_threshold(frag_fifo_upper_threshold[t]),
                 .fifo_overflow(frag_fifo_overflow[t]), 
                 .fifo_underflow(frag_fifo_underflow[t]),
                 .clk(clk), 
@@ -321,6 +325,8 @@ loadBalancer#(
                 .data_in(frag_fifo_wr_data[t]),
                 .threshold_level(fragment_size)
             );  
+            
+            
         end
     endgenerate
    
@@ -343,7 +349,7 @@ loadBalancer#(
 
         .frag_fifo_full(frag_fifo_full), 
         .frag_fifo_empty(frag_fifo_empty), 
-        .frag_fifo_threshold(frag_fifo_threshold), 
+        .frag_fifo_threshold(frag_fifo_lower_threshold), 
         .frag_fifo_overflow(frag_fifo_overflow), 
         .frag_fifo_underflow(frag_fifo_underflow),
 

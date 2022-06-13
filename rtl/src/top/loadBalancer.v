@@ -38,7 +38,8 @@ module loadBalancer#(
 
     input wire [NUM_T_PIPES-1:0] tri_fifo_full, 
     input wire [NUM_T_PIPES-1:0] tri_fifo_empty, 
-    input wire [NUM_T_PIPES-1:0] tri_fifo_threshold, 
+    input wire [NUM_T_PIPES-1:0] tri_fifo_lower_threshold, 
+    input wire [NUM_T_PIPES-1:0] tri_fifo_upper_threshold, 
     input wire [NUM_T_PIPES-1:0] tri_fifo_overflow, 
     input wire [NUM_T_PIPES-1:0] tri_fifo_underflow,
 
@@ -112,6 +113,7 @@ module loadBalancer#(
                             
                             //$display("{\"time\":\"%0t\",\"label\":\"[starting]\", \"data\":\"moving to FETCH_T0_I_ARRAY_RD\"},", $time);
                         end     
+                        tri_fifo_wr_en <= 'b0;
                         done <= 1'b0;
                     end                 
                     
@@ -119,12 +121,7 @@ module loadBalancer#(
                         //$display("{\"time\":\"%0t\",\"label\":\"[fetch_t_sub_state]\", \"data\":\"I_ARRAY_RD\"},", $time);
                         tri_fifo_wr_en <= 'b0;
                         v_mem_wr_en <= 1'b0;
-                        if(tri_count == total_num_tris) begin
-                            state <= IDLE;
-                            done <= 1'b1;
-                            ready <= 1'b1;
-                            tri_count <= 'b0;
-                        end else begin
+                        if(tri_fifo_upper_threshold[t_pipe_select]) begin
                             state <= FETCH_T0_I_ARRAY_WAIT;
                             //$display("{\"time\":\"%0t\",\"label\":\"[index_read_addr]\", \"data\":\"[0x%0h]\"},", $time, main_mem_rd_addr);
                             main_mem_rd_addr <= i_offset + i_array_ptr;
@@ -214,13 +211,7 @@ module loadBalancer#(
                         //$display("{\"time\":\"%0t\",\"label\":\"[fetch_t_sub_state]\", \"data\":\"I_ARRAY_RD\"},", $time);
                         tri_fifo_wr_en <= 'b0;
                         v_mem_wr_en <= 1'b0;
-                        if(tri_count == total_num_tris) begin
-                            state <= IDLE;
-                            done <= 1'b1;
-                            ready <= 1'b1;
-                            tri_count <= 'b0;
-                            
-                        end else begin
+                        if(tri_fifo_upper_threshold[t_pipe_select]) begin
                             state <= FETCH_TN_I_ARRAY_WAIT;
                             //$display("{\"time\":\"%0t\",\"label\":\"[index_read_addr]\", \"data\":\"[0x%0h]\"},", $time, main_mem_rd_addr);
                             main_mem_rd_addr <= i_offset + i_array_ptr;
@@ -304,12 +295,12 @@ module loadBalancer#(
                         
                     end           
                     LOAD_T_2_FIFO_LOCAL_V_READ: begin                    
-                        if(~tri_fifo_full) begin
+                        //if(tri_fifo_upper_threshold[t_pipe_select]) begin
                             v_mem_rd_addr[vertex_rd_num] <= vertex_attr_offset;
                             v_mem_rd_en[vertex_rd_num] <= 1'b1;
                             tri_fifo_wr_en <= 1'b0;
                             state <= LOAD_T_2_FIFO_FIFO_V_WRITE;
-                        end
+                        //end
                     end
                     LOAD_T_2_FIFO_FIFO_V_WRITE: begin
                         state <= LOAD_T_2_FIFO_LOCAL_V_READ;
@@ -330,11 +321,19 @@ module loadBalancer#(
                             end
                             if(vertex_rd_count == 'd2) begin
                                 vertex_rd_count <= 'b0;
-                                state <= FETCH_TN_I_ARRAY_RD;
+                                
                                 
 
-                                if(tri_count < total_num_tris) begin
+                                if(tri_count < (total_num_tris - 'b1)) begin
                                     tri_count <= tri_count + 'b1;
+                                    state <= FETCH_TN_I_ARRAY_RD;
+                                end
+                                if(tri_count == (total_num_tris - 'b1)) begin
+                                    state <= IDLE;
+                                    done <= 1'b1;
+                                    ready <= 1'b1;
+                                    tri_count <= 'b0;
+                                    tri_fifo_wr_en <= 'b1;
                                 end
                                 case(read_order_state)
                                     ABC: read_order_state <= ACB;
@@ -360,6 +359,7 @@ module loadBalancer#(
                             //$display("{\"time\":\"%0t\",\"label\":\"[starting]\", \"data\":\"moving to FETCH_T0_I_ARRAY_RD\"},", $time);
                         end     
                         done <= 1'b0;
+                        tri_fifo_wr_en <= 'b0;
                     end                 
                     
                     FETCH_T0_I_ARRAY_RD: begin
@@ -367,17 +367,13 @@ module loadBalancer#(
                         tri_fifo_wr_en <= 'b0;
                         v_mem_wr_en <= 1'b0;
                         tri_fifo_wr_en <= 1'b0;
-                        if(tri_count == total_num_tris) begin
-                            state <= IDLE;
-                            done <= 1'b1;
-                            ready <= 1'b1;
-                            tri_count <= 'b0;
-                        end else begin
+                        if(tri_fifo_upper_threshold[t_pipe_select]) begin
                             state <= FETCH_T0_I_ARRAY_WAIT;
                             //$display("{\"time\":\"%0t\",\"label\":\"[index_read_addr]\", \"data\":\"[0x%0h]\"},", $time, main_mem_rd_addr);
                             main_mem_rd_addr <= i_offset + i_array_ptr;
                             main_mem_rd_en <= 1'b1;
                         end
+                      
                     
                     end
                     FETCH_T0_I_ARRAY_WAIT: begin
@@ -457,11 +453,11 @@ module loadBalancer#(
                         
                     end         
                     LOAD_T_2_FIFO_LOCAL_V_READ: begin                    
-                        if(~tri_fifo_full) begin
+                        //if(tri_fifo_upper_threshold[t_pipe_select]) begin
                             v_mem_rd_addr[vertex_rd_num] <= vertex_attr_offset;
                             v_mem_rd_en[vertex_rd_num] <= 1'b1;
                             state <= LOAD_T_2_FIFO_FIFO_V_WRITE;
-                        end
+                        //end
                         tri_fifo_wr_en <= 1'b0;
                     end
                     LOAD_T_2_FIFO_FIFO_V_WRITE: begin
@@ -483,11 +479,19 @@ module loadBalancer#(
                             end
                             if(vertex_rd_count == 'd2) begin
                                 vertex_rd_count <= 'b0;
-                                state <= FETCH_T0_I_ARRAY_RD;
+                                
                                 
 
-                                if(tri_count < total_num_tris) begin
+                                if(tri_count < (total_num_tris - 'b1)) begin
                                     tri_count <= tri_count + 'b1;
+                                    state <= FETCH_T0_I_ARRAY_RD;
+                                end
+                                if(tri_count == (total_num_tris - 'b1)) begin
+                                    state <= IDLE;
+                                    done <= 1'b1;
+                                    ready <= 1'b1;
+                                    tri_count <= 'b0;
+                                    tri_fifo_wr_en <= 'b1;
                                 end
                             end
                         end 
@@ -528,7 +532,7 @@ module loadBalancer#(
                         end
                     end
 
-                    if(tri_count == total_num_tris) begin
+                    if(tri_count == (total_num_tris - 'b1)) begin
                         t_pipe_select <= 'b0;
                     end
                 end

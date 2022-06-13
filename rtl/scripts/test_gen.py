@@ -25,6 +25,7 @@ def main():
         csv_filepath = sys.argv[1]
         synthesize = sys.argv[2]
         simulate = sys.argv[3]
+        test_id = int(sys.argv[4])
         # num_tris = int(sys.argv[3])
         # storage_format = sys.argv[4]
         # size = int(sys.argv[5])
@@ -36,7 +37,7 @@ def main():
     else:
         pass
         # res
-    sim_params_dict = pd.read_csv(csv_filepath, index_col="test_id").loc[0].to_dict()
+    sim_params_dict = pd.read_csv(csv_filepath, index_col="test_id").loc[test_id].to_dict()
 
     res_x = sim_params_dict["res_x"]
     res_y = sim_params_dict["res_y"]
@@ -75,10 +76,13 @@ def main():
     faceCullerEnable = sim_params_dict["faceCullerEnable"]
     mode = sim_params_dict["mode"]
     
-    vertex_data, index_data = triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri_gen_location_seed, sim_params_dict['test_name'])
+    # vertex_data, index_data = triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri_gen_location_seed, sim_params_dict['test_name'])
     # print(index_data,vertex_data)
-    # vertex_data, index_data = gen_tris("scripts/Triangles/kitty-cat-kitten-pet-45201.jpeg", num_tris)
-    # print(index_data,vertex_data)
+    vertex_data, index_data = gen_tris("scripts/Triangles/kitty-cat-kitten-pet-45201.jpeg", num_tris)
+    print(index_data,vertex_data)
+    print(index_data.shape,vertex_data.shape)
+    vertex_data, index_data = vertex_data.tolist(), index_data.flatten().tolist()
+    
     # test_stim_file = open("scripts/generate_top_test_components/three_tri_handwritten_strip.txt", "r")
     # test_stim = test_stim_file.read()
     # test_stim_file.close()
@@ -115,7 +119,7 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
     x_array = []
     y_array = []
     i_array = []
-    z0,z1,z2 = 1,1,1
+    z0,z1,z2 = 1,1,7
     seed(tri_gen_seed_location)#
 
     if(storage_format == "individual"):
@@ -140,7 +144,6 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
                 y_array += [(1,0,0),(0,1,0),(0,0,1)]
                 i_array += [3*i,3*i+1,3*i+2]
             if(windingOrder == 0): # anticlockwise
-                print("hi")
                 x_array += [[x2,y2,z2,0,0,1,345],[x1,y1,z1,0,1,0,345],[x0,y0,z0,1,0,0,345]]
                 y_array += [(0,0,1),(0,1,0),(1,0,0)]
                 i_array += [3*i,3*i+1,3*i+2]
@@ -185,8 +188,9 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
         for i in range(0,num_tris-1):
                 
 
-            x0,y0 = x1,y1
-            x1,y1 = x2,y2
+            x0,y0,z0 = x1,y1,z1
+            x1,y1,z1 = x2,y2,z2
+
             x2 = max(x0,x1) + (rand() * size) # x0 or more
             # if(y1>y0):
             #     x2 = x0 + (rand() * size) # x0 or more

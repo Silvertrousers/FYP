@@ -11,7 +11,7 @@
         localparam HalfFP = 32'h3f000000;
         localparam QuarterFP = 32'h3e800000;
         localparam PERIOD = 20;
-        localparam TIMEOUT = PERIOD*100000;
+        localparam TIMEOUT = PERIOD*1000000;
         localparam TRI_MEM_FIFODEPTH = (2**LOCAL_VERTEX_MEM_ADDR_WIDTH)*3*5;
         localparam INDIVIDUAL_TRIANGLES = 1'b0;
         localparam TRIANGLE_STRIP = 1'b1;

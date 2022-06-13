@@ -7,7 +7,8 @@ module FIFO #(
     output wire [(DATAWIDTH-1):0] data_out,
     output wire fifo_full, 
     output wire fifo_empty, 
-    output wire fifo_threshold, 
+    output wire fifo_lower_threshold, 
+    output wire fifo_upper_threshold, 
     output wire fifo_overflow, 
     output wire fifo_underflow,
     input wire clk, 
@@ -15,7 +16,7 @@ module FIFO #(
     input wire wr, 
     input wire rd, 
     input wire [(DATAWIDTH-1):0] data_in,
-    input wire [$clog2(DEPTH):0] threshold_level
+    input wire [31:0] threshold_level
 );  
     
     wire [$clog2(DEPTH):0] wptr,rptr;  
@@ -23,7 +24,7 @@ module FIFO #(
     write_pointer #(DATAWIDTH, DEPTH) write_pointer_i (wptr,fifo_we,wr,fifo_full,clk,resetn);  
     read_pointer  #(DATAWIDTH, DEPTH) read_pointer_i (rptr,fifo_rd,rd,fifo_empty,clk,resetn);  
     memory_array  #(DATAWIDTH, DEPTH) memory_array_i (data_out, data_in, clk,fifo_we, wptr,rptr);  
-    status_signal #(DATAWIDTH, DEPTH) status_signal_i (fifo_full, fifo_empty, fifo_threshold, fifo_overflow, fifo_underflow, wr, rd, fifo_we, fifo_rd, wptr,rptr,clk,resetn,threshold_level);  
+    status_signal #(DATAWIDTH, DEPTH) status_signal_i (fifo_full, fifo_empty, fifo_lower_threshold, fifo_upper_threshold, fifo_overflow, fifo_underflow, wr, rd, fifo_we, fifo_rd, wptr,rptr,clk,resetn,threshold_level);  
  endmodule  
 
 
@@ -104,9 +105,10 @@ module status_signal#(
     parameter DATAWIDTH = 8,
     parameter DEPTH = 16
 )(
-    output reg fifo_full, 
-    output reg fifo_empty, 
-    output reg fifo_threshold, 
+    output wire fifo_full, 
+    output wire fifo_empty, 
+    output wire fifo_lower_threshold, 
+    output wire fifo_upper_threshold, 
     output reg fifo_overflow, 
     output reg fifo_underflow, 
     input wire wr, 
@@ -117,8 +119,9 @@ module status_signal#(
     input wire [$clog2(DEPTH):0]rptr,
     input wire clk,
     input wire resetn,
-    input wire [$clog2(DEPTH):0] threshold_level
+    input wire [31:0] threshold_level
 );  
+    wire [31:0] upper_thres_cond;
     wire fbit_comp, overflow_set, underflow_set;  
     wire pointer_equal;  
     wire [$clog2(DEPTH):0] pointer_result;  
@@ -128,11 +131,27 @@ module status_signal#(
     assign overflow_set = fifo_full & wr;  
     assign underflow_set = fifo_empty&rd; 
 
-    always @(*) begin  
-        fifo_full = fbit_comp & pointer_equal;  
-        fifo_empty = (~fbit_comp) & pointer_equal;  
-        fifo_threshold = (pointer_result >= threshold_level[$clog2(DEPTH)-1:0]) ? 1:0;  
-    end  
+    wire [31:0] fullness_count;
+    reg [31:0] wr_count, rd_count;
+    always @(posedge clk or negedge resetn) begin
+        if(~resetn)begin
+            rd_count <= 'b0;
+            wr_count <= 'b0;
+        end else begin
+            if(wr) begin
+                wr_count = wr_count + 'b1;
+            end
+            if(rd) begin
+                rd_count = rd_count + 'b1;
+            end
+        end
+    end
+    assign fullness_count = wr_count - rd_count;
+    assign fifo_lower_threshold = (fullness_count >= (threshold_level));
+    assign upper_thres_cond = (DEPTH - threshold_level);
+    assign fifo_upper_threshold = (fullness_count <= upper_thres_cond);
+    assign fifo_full = (fullness_count >= DEPTH);
+    assign fifo_empty = (fullness_count == 'b0);
 
     always @(posedge clk or negedge resetn) begin  
         if(~resetn) 
