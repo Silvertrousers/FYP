@@ -39,6 +39,7 @@ module bounding_box_traverser#(
     input wire fifo_underflow,
 
     // flags
+    input wire areaSign,
     input  wire noPerspective,
     input  wire flat,
     input  wire provokeMode,
@@ -98,10 +99,9 @@ module bounding_box_traverser#(
                 P_GEN: begin
                     state <= P_SAMPLE;
                     fragment_interpolator_resetn <= 1'b0; //reset frag interp
-                    
                 end
                 P_SAMPLE: begin
-                    state <= X_WRITE;  
+                    state <= X_WRITE;      
                     fragment_interpolator_resetn <= 1'b1;              
                     
                 end
@@ -126,9 +126,7 @@ module bounding_box_traverser#(
                         y_write <= 1'b1;
                     end
                     state <= FRAGINTERP_WRITEOUT;
-                    if(fragInterp_ready && ~fragInterp_done) begin
-                        fragInterp_start <= 1'b1;
-                    end
+
                 end
                 FRAGINTERP_WRITEOUT: begin
                     //$display("FRAGINTERP_WRITEOUT");
@@ -143,8 +141,11 @@ module bounding_box_traverser#(
                             state <= P_GEN;    
                         end
                     end
-    
-                    fragInterp_start <= 1'b0;
+                    if(fifo_threshold && fragInterp_ready && ~fragInterp_done) begin
+                        fragInterp_start <= 1'b1;
+                    end else begin
+                        fragInterp_start <= 1'b0;
+                    end
                 end
             endcase
         end
@@ -234,7 +235,8 @@ module bounding_box_traverser#(
         .Pout(P_pointSamp_fragInterp),
         .inside(inside),
         .windingOrder(windingOrder),
-        .origin_location(origin_location)
+        .origin_location(origin_location),
+        .areaSign(areaSign)
     );
 
 

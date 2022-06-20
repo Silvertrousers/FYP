@@ -37,23 +37,25 @@ def main():
     plt.rc('font', family='serif')
     
     period = 20
-    num_pipes = 1
+    num_pipes = int(sys.argv[3])
 
     with open(sys.argv[1], "r") as log_file:
         log_data = json.load(log_file)
 
     test_name = sys.argv[2]
     pixel_output(log_data, test_name)
-    visualise_plot("main_mem_rd_activity",log_data,period)
-    visualise_plot("main_mem_wr_activity",log_data,period)
+    visualise_plot(test_name, "main_mem_rd_activity",log_data,period)
+    visualise_plot(test_name, "main_mem_wr_activity",log_data,period)
 
     for i in range(0,num_pipes):
-        visualise_plot(f"tri_fifo_rd_en_{i}",log_data,period)
-        visualise_plot(f"tri_fifo_wr_en_{i}",log_data,period)
-        visualise_plot(f"frag_fifo_rd_en_{i}",log_data,period)
-        visualise_plot(f"frag_fifo_wr_en_{i}",log_data,period)
+        visualise_plot(test_name, f"tri_fifo_rd_en_{i}",log_data,period)
+        visualise_plot(test_name, f"tri_fifo_wr_en_{i}",log_data,period)
+        visualise_plot(test_name, f"frag_fifo_rd_en_{i}",log_data,period)
+        visualise_plot(test_name, f"frag_fifo_wr_en_{i}",log_data,period)
+        visualise_plot(test_name, f"t_proc_start_{i}",log_data,period)
+        visualise_plot(test_name, f"t_proc_done_{i}",log_data,period)
 
-def visualise_plot(label, log_data,period):
+def visualise_plot(test_name, label, log_data,period):
     # main_mem_wr_activity
     # tri_fifo_rd_en_
     # tri_fifo_wr_en_
@@ -76,7 +78,8 @@ def visualise_plot(label, log_data,period):
 
     #fig=plt.gcf()
     #fig.set_size_inches(x,y)
-    plt.savefig(f"data/{label}.pdf", format="pdf", dpi=1200)
+    plt.savefig(f"data/{test_name}/{label}.pdf", format="pdf", dpi=1200)
+    plt.close()
 
 def visualise_accumulate(label, log_data,period):
     # main_mem_wr_activity
@@ -107,7 +110,7 @@ def visualise_accumulate(label, log_data,period):
     #fig=plt.gcf()
     #fig.set_size_inches(x,y)
     plt.savefig(f"data/{label}.pdf", format="pdf", dpi=1200)
-       
+    f.close()
  
 
 def pixel_output(log_data, test_name):

@@ -4,6 +4,8 @@ from re import I
 from telnetlib import WONT
 import numpy as np 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+
 from numpy.random import seed
 from numpy.random import rand
 from cProfile import label
@@ -26,6 +28,7 @@ def main():
         synthesize = sys.argv[2]
         simulate = sys.argv[3]
         test_id = int(sys.argv[4])
+        faceCullTests = sys.argv[5]
         # num_tris = int(sys.argv[3])
         # storage_format = sys.argv[4]
         # size = int(sys.argv[5])
@@ -76,12 +79,17 @@ def main():
     faceCullerEnable = sim_params_dict["faceCullerEnable"]
     mode = sim_params_dict["mode"]
     
-    # vertex_data, index_data = triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri_gen_location_seed, sim_params_dict['test_name'])
-    # print(index_data,vertex_data)
-    vertex_data, index_data = gen_tris("scripts/Triangles/kitty-cat-kitten-pet-45201.jpeg", num_tris)
+    if(faceCullTests == "0"):
+        print("NotCullTest")
+        vertex_data, index_data = triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri_gen_location_seed, sim_params_dict['test_name'])
+    if(faceCullTests == "1"):
+        print("CullTest")
+        vertex_data, index_data = face_cull_two_triangle_gen(res_x, res_y, storage_format, windingOrder, size, tri_gen_location_seed, sim_params_dict['test_name'])
     print(index_data,vertex_data)
-    print(index_data.shape,vertex_data.shape)
-    vertex_data, index_data = vertex_data.tolist(), index_data.flatten().tolist()
+    # vertex_data, index_data = gen_tris("scripts/Triangles/kitty-cat-kitten-pet-45201.jpeg", num_tris)
+    # print(index_data,vertex_data)
+    # print(index_data.shape,vertex_data.shape)
+    # vertex_data, index_data = vertex_data.tolist(), index_data.flatten().tolist()
     
     # test_stim_file = open("scripts/generate_top_test_components/three_tri_handwritten_strip.txt", "r")
     # test_stim = test_stim_file.read()
@@ -111,9 +119,70 @@ def main():
         if(simulate == "SIM"):    
             os.system(f"vvp top_test_gen > logs/{log_name}.txt")
             os.system(f"sed -i '1d' logs/{log_name}.txt")
-            os.system(f"python3 scripts/visualise_rendered_pixels.py logs/{log_name}.txt {sim_params_dict['test_name']}")
+            os.system(f"python3 scripts/visualise_rendered_pixels.py logs/{log_name}.txt {sim_params_dict['test_name']} \"{sim_params_dict['num_t_pipes']}\"")
         
 
+def face_cull_two_triangle_gen(res_x, res_y, storage_format, windingOrder, size, tri_gen_seed_location, test_name):
+    x_array = []
+    y_array = []
+    i_array = []
+    z0,z1,z2 = 1,1,7
+    seed(tri_gen_seed_location)#
+    num_tris = 2
+
+    if(storage_format == "individual"):
+        for i in range(0,2):
+            # choose random location by setting v0 to random place
+            x0 = rand()*res_x
+            y0 = rand()*res_y
+            # generate a random number in the range -1,1, size is a distance parameter
+            x1 = x0 + (rand() * size)
+            y1 = y0 + ((rand() * 2) - 1) * size
+            #if these conditions are flipped you make anticlockwise ones
+            if(y1>y0):
+                x2 = x0 + (rand() * size) # x0 or more
+            if(y1<=y0):
+                x2 = x1 - (rand() * size) # x1 or less
+                
+            
+            y2 = min(y0,y1) - (rand() * size)
+            
+            if(i == 1): #clockwise
+                print("cw")
+                x_array += [[x0,y0,z0,1,0,0,345],[x1,y1,z1,0,1,0,345],[x2,y2,z2,0,0,1,345]]
+                y_array += [(1,0,0),(0,1,0),(0,0,1)]
+                i_array += [3*i,3*i+1,3*i+2]
+            if(i == 0): # anticlockwise
+                print("acw")
+                x_array += [[x2,y2,z2,1,0,0,345],[x1,y1,z1,0,1,0,345],[x0,y0,z0,0,0,1,345]]
+                y_array += [(1,0,0),(0,1,0),(0,0,1)]
+                i_array += [3*i,3*i+1,3*i+2]
+        #completely random colours and attributes
+
+
+        #X = np.array([[1,1], [2,2.5], [3, 1], [8, 7.5], [7, 9], [9, 9]])
+        print(x_array)
+        X = np.array(x_array)
+        Y = y_array
+        plt.figure()
+        plt.scatter(X[:, 0], X[:, 1], s = 70, color = X[:, 3:6])
+
+        for i in range(0,num_tris):
+            t = plt.Polygon(X[3*i:3*(i+1),0:2])
+            plt.gca().add_patch(t)
+        
+
+    plt.gca().add_patch( Rectangle((0, 0),
+                        res_x, res_y,
+                        fc ='none', 
+                        ec =(0,0,0),
+                        lw = 3) )
+
+    plt.savefig(f"renders/{test_name}.png")
+    #plt.show()
+    plt.close()
+    
+    return x_array, i_array
 
 def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri_gen_seed_location, test_name):
     x_array = []
@@ -144,7 +213,7 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
                 y_array += [(1,0,0),(0,1,0),(0,0,1)]
                 i_array += [3*i,3*i+1,3*i+2]
             if(windingOrder == 0): # anticlockwise
-                x_array += [[x2,y2,z2,0,0,1,345],[x1,y1,z1,0,1,0,345],[x0,y0,z0,1,0,0,345]]
+                x_array += [[x2,y2,z2,1,0,0,345],[x1,y1,z1,0,1,0,345],[x0,y0,z0,0,0,1,345]]
                 y_array += [(0,0,1),(0,1,0),(1,0,0)]
                 i_array += [3*i,3*i+1,3*i+2]
         #completely random colours and attributes
@@ -168,20 +237,18 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
         y0 = rand()*res_y
         # generate a random number in the range -1,1, size is a distance parameter
         x1 = x0 + (rand() * size)
-        y1 = y0 + ((rand() * 2) - 1) * size
+        y1 = y0 + ((rand())) * size
         #if these conditions are flipped you make anticlockwise ones
-        if(y1>y0):
-            x2 = x0 + (rand() * size) # x0 or more
-        if(y1<=y0):
-            x2 = x1 - (rand() * size) # x1 or less
-        y2 = min(y0,y1) - (rand() * size)
-            
+     
+        x2 = max(x0,x1) + (rand() * size) # x0 or more
+        y2 = min(y0,y1) #+ (rand() * size)
+
         if(windingOrder == 1): #clockwise
             x_array += [[x0,y0,z0,1,0,0,345],[x1,y1,z1,0,1,0,345],[x2,y2,z2,0,0,1,345]]
             y_array += [(1,0,0),(0,1,0),(0,0,1)]
             i_array += [0,1,2]
         if(windingOrder == 0): # anticlockwise
-            x_array += [[x2,y2,z2,0,0,1,345],[x1,y1,z1,0,1,0,345],[x0,y0,z0,1,0,0,345]]
+            x_array += [[x2,y2,z2,1,0,0,345],[x1,y1,z1,0,1,0,345],[x0,y0,z0,0,0,1,345]]
             y_array += [(0,0,1),(0,1,0),(1,0,0)]
             i_array += [0,1,2]
 
@@ -191,13 +258,15 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
             x0,y0,z0 = x1,y1,z1
             x1,y1,z1 = x2,y2,z2
 
+            # x2 = max(x0,x1) + (rand() * size) # x0 or more
+            # # if(y1>y0):
+            # #     x2 = x0 + (rand() * size) # x0 or more
+            # # if(y1<=y0):
+            # #     x2 = x1 - (rand() * size) # x1 or less
+            # y2 = min(y0,y1) - (rand() * size)
             x2 = max(x0,x1) + (rand() * size) # x0 or more
-            # if(y1>y0):
-            #     x2 = x0 + (rand() * size) # x0 or more
-            # if(y1<=y0):
-            #     x2 = x1 - (rand() * size) # x1 or less
-            y2 = min(y0,y1) - (rand() * size)
-                
+            y2 = y0
+
             if(i%3 == 0):
                 r,g,b = 1,0,0
             if(i%3 == 1):
@@ -227,8 +296,15 @@ def triangle_gen(res_x, res_y, num_tris, storage_format, windingOrder, size, tri
             t = plt.Polygon(X[i:i+3,0:2])
             plt.gca().add_patch(t)
 
+    plt.gca().add_patch( Rectangle((0, 0),
+                        res_x, res_y,
+                        fc ='none', 
+                        ec =(0,0,0),
+                        lw = 3) )
+
     plt.savefig(f"renders/{test_name}.png")
-    plt.show()
+    plt.close()
+    #plt.show()
     return x_array, i_array
     
 def generate_verilog(vertex_data, index_data, storage_format):

@@ -38,7 +38,7 @@ module top#(
     localparam FRAG_FIFODEPTH = (2**LOCAL_VERTEX_MEM_ADDR_WIDTH)*FIFO_MAX_FRAGMENTS; //fragment size * num fragments, must be power of 2
     localparam TRI_FIFODEPTH = (2**LOCAL_VERTEX_MEM_ADDR_WIDTH)*4*FIFO_MAX_TRIANGLES; //vertex size * num vertices in triangle rounded to nearest pwr of 2 * num triangles, must be power of 2
 
-    reg  [NUM_T_PIPES-1:0] tri_pipe_start;
+    reg  [NUM_T_PIPES-1:0] tri_pipe_start, tri_pipe_resetn;
     wire [NUM_T_PIPES-1:0] tri_pipe_done;
     wire [NUM_T_PIPES-1:0] tri_pipe_ready;
 
@@ -236,14 +236,17 @@ loadBalancer#(
                 if(~resetn)begin
                     tri_pipe_start <= 'b0;
                     tri_pipe_active <= 'b0;
+                    tri_pipe_resetn <= 1'b1;
                 end else begin
                     if(((tri_pipe_ready[t]) && (tri_fifo_lower_threshold[t])) && ~tri_pipe_start[t]) begin
                         tri_pipe_start[t] <= 1'b1;
                         tri_pipe_active[t] <= 1'b1;
+                        tri_pipe_resetn[t] <= 'b1;
                     end else begin
                         tri_pipe_start[t] <= 1'b0;
                     end
                     if(tri_pipe_done[t]) begin
+                        tri_pipe_resetn[t] <= 'b0;
                         tri_pipe_active[t] <= 1'b0;
                     end
                 end
@@ -273,7 +276,7 @@ loadBalancer#(
                 LOCAL_VERTEX_MEM_ADDR_WIDTH,      
                 CYCLES_WAIT_FOR_RECIEVE
             ) triangle_pipe_i (
-                clk, resetn, en, 
+                clk, resetn && tri_pipe_resetn, en, 
                 tri_pipe_start[t], 
                 tri_pipe_done[t],
                 tri_pipe_ready[t],
@@ -285,7 +288,7 @@ loadBalancer#(
                 //fragment fifo control (unused for the moment) TODO: use these flags to control output
                 frag_fifo_full[t], 
                 frag_fifo_empty[t], 
-                frag_fifo_lower_threshold[t], 
+                frag_fifo_upper_threshold[t], 
                 frag_fifo_overflow[t], 
                 frag_fifo_underflow[t],
 
@@ -363,34 +366,55 @@ loadBalancer#(
 
 
 `ifdef MEASURE
+    reg reset_detected;
+    always @(negedge resetn) begin
+        reset_detected <= 1'b1;
+    end
     always @(posedge clk) begin
-        //load balancer activity
-        // reading
-        // writing
-        
-        //tri fifo activity
-        //frag fifo activity
-        //tri pipe activity
-        //wr arbiter activity
-        if(mem_rd_en) begin
-            $display("{\"time\":\"%0t\",\"label\":\"[main_mem_rd_activity]\", \"data\":%0d},", $time, mem_rd_addr);
-        end
-        if(mem_wr_en) begin
-            $display("{\"time\":\"%0t\",\"label\":\"[main_mem_wr_activity]\", \"data\":%0d},", $time, mem_wr_addr);
+        if(reset_detected) begin
+            //load balancer activity
+            // reading
+            // writing
+            
+            //tri fifo activity
+            //frag fifo activity
+            //tri pipe activity
+            //wr arbiter activity
+            if(mem_rd_en) begin
+                $display("{\"time\":\"%0t\",\"label\":\"[main_mem_rd_activity]\", \"data\":%0d},", $time, mem_rd_addr);
+            end
+            if(mem_wr_en) begin
+                $display("{\"time\":\"%0t\",\"label\":\"[main_mem_wr_activity]\", \"data\":%0d},", $time, mem_wr_addr);
+            end
         end
     end
-    // genvar t_pipe;
-    // generate
-    //     for(t_pipe=0; t_pipe < NUM_T_PIPES; t_pipe=t_pipe+1) begin: T_PIPE_measure
-    //         always @(*) begin
-    //             $display("{\"time\":\"%0t\",\"label\":\"[tri_fifo_rd_en_%0d]\", \"data\":%0b},", $time, t_pipe, tri_fifo_rd_en[t_pipe]);
-    //             $display("{\"time\":\"%0t\",\"label\":\"[tri_fifo_wr_en_%0d]\", \"data\":%0b},", $time, t_pipe, tri_fifo_wr_en[t_pipe]);
-    //             $display("{\"time\":\"%0t\",\"label\":\"[frag_fifo_rd_en_%0d]\", \"data\":%0b},", $time, t_pipe, frag_fifo_rd_en[t_pipe]);
-    //             $display("{\"time\":\"%0t\",\"label\":\"[frag_fifo_wr_en_%0d]\", \"data\":%0b},", $time, t_pipe, frag_fifo_wr_en[t_pipe]);
-    //         //measure empty, measure full, measure threshold, maybe measure how full/empty by looking at wr ptr
-    //         end
-    //     end
-    // endgenerate
+    genvar t_pipe;
+    generate
+        for(t_pipe=0; t_pipe < NUM_T_PIPES; t_pipe=t_pipe+1) begin: T_PIPE_measure
+            always @(*) begin
+                if(reset_detected) begin
+                    if((tri_fifo_rd_en[t_pipe] == 'b0) || (tri_fifo_rd_en[t_pipe] == 'b1))
+                        $display("{\"time\":\"%0t\",\"label\":\"[tri_fifo_rd_en_%0d]\", \"data\":%0b},", $time, t_pipe, tri_fifo_rd_en[t_pipe]);
+                    
+                    if((tri_fifo_wr_en[t_pipe] == 'b0) || (tri_fifo_wr_en[t_pipe] == 'b1))
+                        $display("{\"time\":\"%0t\",\"label\":\"[tri_fifo_wr_en_%0d]\", \"data\":%0b},", $time, t_pipe, tri_fifo_wr_en[t_pipe]);
+                    
+                    if((frag_fifo_rd_en[t_pipe] == 'b0) || (frag_fifo_rd_en[t_pipe] == 'b1))
+                        $display("{\"time\":\"%0t\",\"label\":\"[frag_fifo_rd_en_%0d]\", \"data\":%0b},", $time, t_pipe, frag_fifo_rd_en[t_pipe]);
+                    
+                    if((frag_fifo_wr_en[t_pipe] == 'b0) || (frag_fifo_wr_en[t_pipe] == 'b1))
+                        $display("{\"time\":\"%0t\",\"label\":\"[frag_fifo_wr_en_%0d]\", \"data\":%0b},", $time, t_pipe, frag_fifo_wr_en[t_pipe]);
+                    
+                    if((tri_pipe_start[t_pipe] == 'b0) || (tri_pipe_start[t_pipe] == 'b1))
+                        $display("{\"time\":\"%0t\",\"label\":\"[t_proc_start_%0d]\", \"data\":%0b},", $time, t_pipe, tri_pipe_start[t_pipe]);
+                    
+                    if((tri_pipe_done[t_pipe] == 'b0) || (tri_pipe_done[t_pipe] == 'b1))
+                        $display("{\"time\":\"%0t\",\"label\":\"[t_proc_done_%0d]\", \"data\":%0b},", $time, t_pipe, tri_pipe_done[t_pipe]);
+                //measure empty, measure full, measure threshold, maybe measure how full/empty by looking at wr ptr
+                end
+            end
+        end
+    endgenerate
 `endif
 endmodule
 

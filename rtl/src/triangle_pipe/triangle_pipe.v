@@ -49,7 +49,7 @@ module triangle_pipe#(
     wire [65:0] Pa, Pb, Pc;
     wire [63:0] PaFN, PbFN, PcFN;
     reg [63:0] PaFNReg, PbFNReg, PcFNReg;
-    reg startTraversal;
+    reg startTraversal, doneCull;
     wire startCull;
     wire [32:0] TwoA;
     wire cull;
@@ -77,15 +77,25 @@ module triangle_pipe#(
             if(done) begin
                 ready <= 1'b1;
                 done <= 1'b0;
-            end else if((bounding_box_traverser_done || cull ) && ~ready) begin
+            end else if((bounding_box_traverser_done || (doneCull && cull) ) && ~ready) begin
                 done <= 1'b1;
+                PaFNReg <= 'b0;
+                PbFNReg <= 'b0;
+                PcFNReg <= 'b0;
             end
             if(startCull) begin
                 PaFNReg <= PaFN;
                 PbFNReg <= PbFN;
                 PcFNReg <= PcFN;
+                doneCull <= 'b1;
+            end else begin
+                doneCull <= 'b0;
             end
-            startTraversal <= startCull;
+            if(frag_fifo_threshold && doneCull) begin
+                startTraversal <= 1'b1;
+            end else begin
+                startTraversal <= 1'b0;
+            end
         end
     end
       
@@ -207,6 +217,7 @@ module triangle_pipe#(
         .fifo_underflow(frag_fifo_underflow),
 
         // flags
+        .areaSign(TwoA[32]),
         .noPerspective(noPerspective),
         .flat(flat),
         .provokeMode(provokeMode),

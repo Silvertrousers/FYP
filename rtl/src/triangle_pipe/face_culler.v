@@ -26,13 +26,17 @@ module face_culler(
     localparam F = 'b01;
     localparam FB = 'b10;
     reg signForCulling;
-    always @(*) begin
-        case({origin_location, windingOrder, Mode[0]})
-            {TL, ACW, F}: signForCulling = MINUS;
-            {BL,  CW, F}: signForCulling = MINUS;
-            {TL,  CW, B}: signForCulling = MINUS;
-            {BL, ACW, B}: signForCulling = MINUS;
-            default:      signForCulling = PLUS;
+//    assign signForCulling = ({windingOrder, Mode[0]} == {ACW, F}) ? PLUS : (({windingOrder, Mode[0]} == {CW, F}) ? MINUS : (({windingOrder, Mode[0]} == {CW, B}) ? PLUS : MINUS));
+
+// (windingOrder == ACW) ? (Mode[0] == F ? signForCulling = PLUS : {ACW, F}: signForCulling = PLUS) : ({ CW, F}: signForCulling = MINUS; { CW, B}: signForCulling = PLUS;) ;
+    always @(windingOrder or Mode[0]) begin
+        case({windingOrder, Mode[0]})
+        //ACW = PLUS#
+        //CW = MINUS
+            {ACW, F}: signForCulling = PLUS;
+            { CW, F}: signForCulling = MINUS;
+            { CW, B}: signForCulling = PLUS;
+            {ACW, B}: signForCulling = MINUS;
         endcase
     end
     

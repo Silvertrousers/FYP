@@ -700,7 +700,7 @@ module wrArbiter#(
         if(~resetn) begin
             t_pipe_select <= 'b0;
         end else begin
-            if((fragOffs == vertexSize) || ((t_pipe_select == (NUM_T_PIPES-1)) && (frag_fifo_empty[t_pipe_select]))) begin // this works if assume that can write 1 frag to mem faster than 1 frag can be created
+            if((fragOffs == vertexSize) || (~frag_fifo_rd_en[t_pipe_select] && ~frag_fifo_threshold[t_pipe_select]) || ((t_pipe_select == (NUM_T_PIPES-1)) && (frag_fifo_empty[t_pipe_select]))) begin // this works if assume that can write 1 frag to mem faster than 1 frag can be created
                 if(t_pipe_select < (NUM_T_PIPES-1)) begin
                     t_pipe_select <= t_pipe_select + 'b1; 
                 end
